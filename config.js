@@ -3,7 +3,8 @@ window.APP_CONFIG = {
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzbercXLtx0hpyZbw_UcFUeIiMSbzbE6G3CqtrpIErJNoylmeOIkAAGOJ4S0Su021m9jA/exec",
   USERS: [
     { name: "Christelle", pin: "1111" },
-    { name: "Ludovic", pin: "2222" },
-    { name: "Lesli", pin: "3333" }
+    { name: "Ludovic",    pin: "2222" },
+    { name: "Lesli",      pin: "3333" }
+    // Admin : PIN 9999 (intégré dans app.js, ne pas ajouter ici)
   ]
 };
