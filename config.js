@@ -1,5 +1,5 @@
 window.APP_CONFIG = {
-  APPS_SCRIPT_URL: "https://script.google.com/macros/library/d/1bQNTNCgjyl3LEz3pJAMPJoPh7jRjzMe78b1Ibn3lEIbikMs1w7hGsxSx/1",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzbercXLtx0hpyZbw_UcFUeIiMSbzbE6G3CqtrpIErJNoylmeOIkAAGOJ4S0Su021m9jA/exec",
   RESTAURANT_NAME: "L'Embouchure",
   SAMPLE_USERS: [
     {name:"Christelle", role:"Cuisine", pin:"1111"},
