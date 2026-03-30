@@ -39,6 +39,8 @@ function login() {
 
 function renderApp() {
 
+  document.getElementById("app").innerHTML = "<p>Chargement...</p>";
+
   fetch(config.APPS_SCRIPT_URL)
     .then(res => res.json())
     .then(produits => {
@@ -58,6 +60,21 @@ function renderApp() {
 
         <br><br>
         <button onclick="renderLogin()">Déconnexion</button>
+      `;
+    })
+
+    .catch(err => {
+      console.error(err);
+
+      document.getElementById("app").innerHTML = `
+        <h2>${user.name}</h2>
+
+        <p style="color:red;">Erreur chargement produits</p>
+
+        <input id="ruptureProduit" placeholder="Produit">
+        <input id="ruptureQty" placeholder="Quantité">
+
+        <button onclick="sendRupture()">Envoyer</button>
       `;
     });
 }
