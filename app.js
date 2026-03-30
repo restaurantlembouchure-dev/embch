@@ -2,6 +2,18 @@ const config = window.APP_CONFIG;
 
 let user = null;
 let produits = [];
+let checklist = [];
+
+const jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+
+function getJourService() {
+  const now = new Date();
+  const jour = jours[now.getDay()];
+  const service = now.getHours() < 15 ? "Midi" : "Soir";
+  return { jour, service };
+}
+
+/* ================= LOGIN ================= */
 
 function renderLogin() {
   document.getElementById("app").innerHTML = `
@@ -31,39 +43,57 @@ function login() {
   }
 
   user = found;
-  loadProduits();
+  loadData();
 }
 
-function loadProduits() {
-  document.getElementById("app").innerHTML = "<p>Chargement produits...</p>";
+/* ================= LOAD DATA ================= */
 
-  fetch(config.APPS_SCRIPT_URL)
-    .then(res => res.json())
-    .then(data => {
-      produits = data;
-      renderApp();
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Erreur connexion Google Sheets");
-      renderApp(); // fallback
-    });
+function loadData() {
+  document.getElementById("app").innerHTML = "<p>Chargement...</p>";
+
+  Promise.all([
+    fetch(config.APPS_SCRIPT_URL + "?action=getProduits").then(r => r.text()),
+    fetch(config.APPS_SCRIPT_URL + "?action=getChecklist").then(r => r.text())
+  ])
+  .then(([prodText, checklistText]) => {
+
+    try {
+      produits = JSON.parse(prodText);
+      checklist = JSON.parse(checklistText);
+    } catch (e) {
+      console.error("Erreur JSON:", e);
+      alert("Erreur parsing données");
+      produits = [];
+      checklist = [];
+    }
+
+    renderApp();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Erreur connexion Google Sheets");
+    renderApp();
+  });
 }
+
+/* ================= APP ================= */
 
 function renderApp() {
+
+  const { jour, service } = getJourService();
+
   document.getElementById("app").innerHTML = `
     <h2>${user.name}</h2>
+    <p>${jour} - ${service}</p>
+
+    ${renderChecklist(jour, service)}
 
     <h3>Rupture</h3>
-
     <select id="ruptureProduit">
-      ${produits.length > 0 
-        ? produits.map(p => `<option>${p}</option>`).join("") 
-        : `<option>Produit manuel</option>`}
+      ${produits.map(p => `<option>${p}</option>`).join("")}
     </select>
 
     <input id="ruptureQty" placeholder="Quantité">
-
     <button id="ruptureBtn">Envoyer</button>
 
     <br><br>
@@ -74,7 +104,34 @@ function renderApp() {
   document.getElementById("logoutBtn").addEventListener("click", renderLogin);
 }
 
+/* ================= CHECKLIST ================= */
+
+function renderChecklist(jour, service) {
+
+  const filtered = checklist.filter(item =>
+    item.employe === user.name &&
+    item.jour === jour &&
+    item.service === service
+  );
+
+  if (filtered.length === 0) {
+    return "<p>Aucune tâche prévue</p>";
+  }
+
+  return `
+    <h3>Checklist</h3>
+    ${filtered.map(t => `
+      <label>
+        <input type="checkbox"> ${t.tache}
+      </label><br>
+    `).join("")}
+  `;
+}
+
+/* ================= RUPTURE ================= */
+
 async function sendRupture() {
+
   const data = {
     action: "rupture",
     employe: user.name,
@@ -95,5 +152,7 @@ async function sendRupture() {
     alert("Erreur envoi");
   }
 }
+
+/* ================= INIT ================= */
 
 window.onload = renderLogin;
