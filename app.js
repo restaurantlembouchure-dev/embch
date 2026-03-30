@@ -85,21 +85,20 @@ function renderApp() {
 }
 
 function renderChecklist(jour, service) {
-  const filtered = checklist.filter(c =>
-    c.employe === user.name &&
+
+  const mep = checklist.filter(c =>
     c.jour === jour &&
     c.service === service
   );
 
-  if (filtered.length === 0) {
-    return "<p>Aucune tâche prévue</p>";
-  }
+  if (mep.length === 0) return "<p>Aucune production</p>";
 
   return `
-    <h3>Checklist</h3>
-    ${filtered.map(c => `
+    <h3>Mise en place</h3>
+    ${mep.map(m => `
       <label>
-        <input type="checkbox"> ${c.tache}
+        <input type="checkbox">
+        ${m.produit} : ${m.quantite} ${m.unite}
       </label><br>
     `).join("")}
   `;
