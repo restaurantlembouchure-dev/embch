@@ -38,32 +38,28 @@ function login() {
 }
 
 function renderApp() {
-  document.getElementById("app").innerHTML = `
-    <h2>${user.name}</h2>
-    <p>${jour} - ${service}</p>
 
-    <h3>Checklist</h3>
-    <label><input type="checkbox"> Vérifier stock</label><br>
-    <label><input type="checkbox"> Préparer poste</label><br>
+  fetch(config.APPS_SCRIPT_URL)
+    .then(res => res.json())
+    .then(produits => {
 
-    <h3>Rupture</h3>
-    <input id="ruptureProduit" placeholder="Produit">
-    <input id="ruptureQty" placeholder="Quantité">
-    <button onclick="sendRupture()">Envoyer</button>
+      document.getElementById("app").innerHTML = `
+        <h2>${user.name}</h2>
 
-    <h3>Pertes</h3>
-    <input id="perteProduit" placeholder="Produit">
-    <input id="perteQty" placeholder="Quantité">
-    <input id="pertePhoto" placeholder="Photo (nom)">
-    <button onclick="sendPerte()">Envoyer</button>
+        <h3>Rupture</h3>
 
-    <h3>Validation</h3>
-    <input id="confirmPin" placeholder="PIN" type="password">
-    <button onclick="validate()">Valider</button>
+        <select id="ruptureProduit">
+          ${produits.map(p => `<option>${p}</option>`).join("")}
+        </select>
 
-    <br><br>
-    <button onclick="renderLogin()">Déconnexion</button>
-  `;
+        <input id="ruptureQty" placeholder="Quantité">
+
+        <button onclick="sendRupture()">Envoyer</button>
+
+        <br><br>
+        <button onclick="renderLogin()">Déconnexion</button>
+      `;
+    });
 }
 
 async function sendRupture() {
