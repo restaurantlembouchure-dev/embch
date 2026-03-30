@@ -1,30 +1,27 @@
 const config = window.APP_CONFIG;
 
 let user = null;
-
-const today = new Date();
-const jour = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"][today.getDay()];
-const heure = today.getHours();
-const service = (heure < 15) ? "Midi" : "Soir";
+let produits = [];
 
 function renderLogin() {
   document.getElementById("app").innerHTML = `
     <h2>${config.RESTAURANT_NAME}</h2>
-    <p>${jour} - Service ${service}</p>
 
-    <select id="user">
+    <select id="userSelect">
       ${config.SAMPLE_USERS.map(u => `<option value="${u.name}">${u.name}</option>`).join("")}
     </select>
 
-    <input id="pin" placeholder="PIN" type="password"/>
+    <input id="pinInput" placeholder="PIN" type="password"/>
 
-    <button onclick="login()">Se connecter</button>
+    <button id="loginBtn">Se connecter</button>
   `;
+
+  document.getElementById("loginBtn").addEventListener("click", login);
 }
 
 function login() {
-  const name = document.getElementById("user").value;
-  const pin = document.getElementById("pin").value;
+  const name = document.getElementById("userSelect").value;
+  const pin = document.getElementById("pinInput").value;
 
   const found = config.SAMPLE_USERS.find(u => u.name === name && u.pin === pin);
 
@@ -34,109 +31,69 @@ function login() {
   }
 
   user = found;
-  renderApp();
+  loadProduits();
 }
 
-function renderApp() {
-
-  document.getElementById("app").innerHTML = "<p>Chargement...</p>";
+function loadProduits() {
+  document.getElementById("app").innerHTML = "<p>Chargement produits...</p>";
 
   fetch(config.APPS_SCRIPT_URL)
     .then(res => res.json())
-    .then(produits => {
-
-      document.getElementById("app").innerHTML = `
-        <h2>${user.name}</h2>
-
-        <h3>Rupture</h3>
-
-        <select id="ruptureProduit">
-          ${produits.map(p => `<option>${p}</option>`).join("")}
-        </select>
-
-        <input id="ruptureQty" placeholder="Quantité">
-
-        <button onclick="sendRupture()">Envoyer</button>
-
-        <br><br>
-        <button onclick="renderLogin()">Déconnexion</button>
-      `;
+    .then(data => {
+      produits = data;
+      renderApp();
     })
-
     .catch(err => {
       console.error(err);
-
-      document.getElementById("app").innerHTML = `
-        <h2>${user.name}</h2>
-
-        <p style="color:red;">Erreur chargement produits</p>
-
-        <input id="ruptureProduit" placeholder="Produit">
-        <input id="ruptureQty" placeholder="Quantité">
-
-        <button onclick="sendRupture()">Envoyer</button>
-      `;
+      alert("Erreur connexion Google Sheets");
+      renderApp(); // fallback
     });
+}
+
+function renderApp() {
+  document.getElementById("app").innerHTML = `
+    <h2>${user.name}</h2>
+
+    <h3>Rupture</h3>
+
+    <select id="ruptureProduit">
+      ${produits.length > 0 
+        ? produits.map(p => `<option>${p}</option>`).join("") 
+        : `<option>Produit manuel</option>`}
+    </select>
+
+    <input id="ruptureQty" placeholder="Quantité">
+
+    <button id="ruptureBtn">Envoyer</button>
+
+    <br><br>
+    <button id="logoutBtn">Déconnexion</button>
+  `;
+
+  document.getElementById("ruptureBtn").addEventListener("click", sendRupture);
+  document.getElementById("logoutBtn").addEventListener("click", renderLogin);
 }
 
 async function sendRupture() {
   const data = {
     action: "rupture",
-    date: new Date().toISOString(),
-    service,
     employe: user.name,
     produit: document.getElementById("ruptureProduit").value,
     quantite: document.getElementById("ruptureQty").value
   };
 
-  await fetch(config.APPS_SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  });
+  try {
+    const res = await fetch(config.APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
 
-  alert("Rupture envoyée");
-}
+    const txt = await res.text();
+    alert("OK : " + txt);
 
-async function sendPerte() {
-  const data = {
-    action: "perte",
-    date: new Date().toISOString(),
-    service,
-    employe: user.name,
-    produit: document.getElementById("perteProduit").value,
-    quantite: document.getElementById("perteQty").value,
-    photo: document.getElementById("pertePhoto").value
-  };
-
-  await fetch(config.APPS_SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  });
-
-  alert("Perte envoyée");
-}
-
-async function validate() {
-  const pin = document.getElementById("confirmPin").value;
-
-  if (pin !== user.pin) {
-    alert("PIN incorrect");
-    return;
+  } catch (e) {
+    alert("Erreur envoi");
   }
-
-  const data = {
-    action: "validation",
-    date: new Date().toISOString(),
-    service,
-    employe: user.name
-  };
-
-  await fetch(config.APPS_SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify(data)
-  });
-
-  alert("Validation envoyée");
 }
 
 window.onload = renderLogin;
