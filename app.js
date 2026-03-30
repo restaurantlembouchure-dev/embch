@@ -46,11 +46,11 @@ function loadData() {
 
   Promise.all([
     fetch(config.APPS_SCRIPT_URL + "?action=getProduits").then(r => r.text()),
-    fetch(config.APPS_SCRIPT_URL + "?action=getChecklist").then(r => r.text())
+    fetch(config.APPS_SCRIPT_URL + "?action=getMEP").then(r => r.text())
   ])
-  .then(([p, c]) => {
+  .then(([p, m]) => {
     produits = JSON.parse(p);
-    checklist = JSON.parse(c);
+    checklist = JSON.parse(m); // ⚠️ ici checklist devient MEP
     renderApp();
   })
   .catch(() => {
@@ -84,24 +84,30 @@ function renderApp() {
   `;
 }
 
-function renderChecklist(jour, service) {
+unction renderChecklist(jour, service) {
 
-  const mep = checklist.filter(c =>
-    c.jour === jour &&
-    c.service === service
+  const filtered = checklist.filter(item =>
+    item.jour === jour &&
+    item.service === service
   );
 
-  if (mep.length === 0) return "<p>Aucune production</p>";
+  if (filtered.length === 0) {
+    return "<p>Aucune mise en place prévue</p>";
+  }
 
   return `
     <h3>Mise en place</h3>
-    ${mep.map(m => `
+    ${filtered.map(item => `
       <label>
         <input type="checkbox">
-        ${m.produit} : ${m.quantite} ${m.unite}
+        ${item.produit} : ${round(item.quantite)} ${item.unite}
       </label><br>
     `).join("")}
   `;
+}
+
+function round(n) {
+  return Math.round(n * 100) / 100;
 }
 
 function selectProduits(id) {
