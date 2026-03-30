@@ -42,66 +42,86 @@ function renderApp() {
     <h2>${user.name}</h2>
     <p>${jour} - ${service}</p>
 
-    ${renderChecklist()}
-    ${renderRupture()}
-    ${renderPerte()}
-    ${renderValidation()}
+    <h3>Checklist</h3>
+    <label><input type="checkbox"> Vérifier stock</label><br>
+    <label><input type="checkbox"> Préparer poste</label><br>
+
+    <h3>Rupture</h3>
+    <input id="ruptureProduit" placeholder="Produit">
+    <input id="ruptureQty" placeholder="Quantité">
+    <button onclick="sendRupture()">Envoyer</button>
+
+    <h3>Pertes</h3>
+    <input id="perteProduit" placeholder="Produit">
+    <input id="perteQty" placeholder="Quantité">
+    <input id="pertePhoto" placeholder="Photo (nom)">
+    <button onclick="sendPerte()">Envoyer</button>
+
+    <h3>Validation</h3>
+    <input id="confirmPin" placeholder="PIN" type="password">
+    <button onclick="validate()">Valider</button>
 
     <br><br>
     <button onclick="renderLogin()">Déconnexion</button>
   `;
 }
 
-function renderChecklist() {
-  return `
-    <h3>Checklist</h3>
-    <label><input type="checkbox"> Vérifier stock</label><br>
-    <label><input type="checkbox"> Préparer poste</label><br>
-  `;
+async function sendRupture() {
+  const data = {
+    action: "rupture",
+    date: new Date().toISOString(),
+    service,
+    employe: user.name,
+    produit: document.getElementById("ruptureProduit").value,
+    quantite: document.getElementById("ruptureQty").value
+  };
+
+  await fetch(config.APPS_SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+
+  alert("Rupture envoyée");
 }
 
-function renderRupture() {
-  return `
-    <h3>Rupture</h3>
-    <input id="ruptureProduit" placeholder="Produit">
-    <input id="ruptureQty" placeholder="Quantité">
-    <button onclick="sendRupture()">Envoyer</button>
-  `;
+async function sendPerte() {
+  const data = {
+    action: "perte",
+    date: new Date().toISOString(),
+    service,
+    employe: user.name,
+    produit: document.getElementById("perteProduit").value,
+    quantite: document.getElementById("perteQty").value,
+    photo: document.getElementById("pertePhoto").value
+  };
+
+  await fetch(config.APPS_SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+
+  alert("Perte envoyée");
 }
 
-function renderPerte() {
-  return `
-    <h3>Pertes</h3>
-    <input id="perteProduit" placeholder="Produit">
-    <input id="perteQty" placeholder="Quantité">
-    <input id="pertePhoto" placeholder="Photo (nom)">
-    <button onclick="sendPerte()">Envoyer</button>
-  `;
-}
-
-function renderValidation() {
-  return `
-    <h3>Validation</h3>
-    <input id="confirmPin" placeholder="PIN" type="password">
-    <button onclick="validate()">Valider</button>
-  `;
-}
-
-function sendRupture() {
-  alert("Rupture enregistrée");
-}
-
-function sendPerte() {
-  alert("Perte enregistrée");
-}
-
-function validate() {
+async function validate() {
   const pin = document.getElementById("confirmPin").value;
 
   if (pin !== user.pin) {
     alert("PIN incorrect");
     return;
   }
+
+  const data = {
+    action: "validation",
+    date: new Date().toISOString(),
+    service,
+    employe: user.name
+  };
+
+  await fetch(config.APPS_SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
 
   alert("Validation envoyée");
 }
